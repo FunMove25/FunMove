@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FunMove - Inscription aux stages</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <header class="text-center mb-4">
+            <div class="logo-container">
+                <img src="./images/logo.png" alt="Logo FunMove" class="img-fluid">
+            </div>
+            <h1>FunMove</h1>
+        </header>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h2 class="section-title mb-4">Inscription d'un enfant</h2>
+                <form id="inscriptionForm" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="nom" class="form-label">Nom/Prénom</label>
+                        <input type="text" class="form-control" id="nom" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sexe" class="form-label">Sexe</label>
+                        <select class="form-select" id="sexe" required>
+                            <option value="">Choisir...</option>
+                            <option value="Homme">Homme</option>
+                            <option value="Femme">Femme</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="age" class="form-label">Âge</label>
+                        <input type="number" class="form-control" id="age" required min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="stage" class="form-label">Stage</label>
+                        <select class="form-select" id="stage" required>
+                            <option value="">Choisir...</option>
+                            <option value="VTT Débutant">VTT Débutant</option>
+                            <option value="VTT Intermédiaire">VTT Intermédiaire</option>
+                            <option value="VTT Confirmé">VTT Confirmé</option>
+                            <option value="Danse">Danse</option>
+                            <option value="Artistique/Culinaire">Artistique/Culinaire</option>
+                            <option value="Multisport">Multisport</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="semaine" class="form-label">Semaine</label>
+                        <select class="form-select" id="semaine" required>
+                            <option value="">Choisir...</option>
+                            <option value="Pâques 2025">Pâques semaine du 5 au 9 mai 2025</option>
+                            <option value="Été S1 2025">Été semaine du 7 au 11 juillet 2025</option>
+                            <option value="Été S2 2025">Été semaine du 14 au 18 juillet 2025</option>
+                            <option value="Été S3 2025">Été semaine du 22 au 25 juillet 2025</option>
+                            <option value="Été S4 2025">Été semaine du 18 au 22 août 2025</option>
+                            <option value="Toussaint 2025">Toussaint semaine du 20 au 25 octobre 2025</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="parents" class="form-label">Noms des parents</label>
+                        <input type="text" class="form-control" id="parents" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telephone" class="form-label">Numéro de téléphone des parents</label>
+                        <input type="tel" class="form-control" id="telephone" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="allergies" class="form-label">Allergies</label>
+                        <textarea class="form-control" id="allergies" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="montant" class="form-label">Montant du stage (€)</label>
+                        <input type="number" class="form-control" id="montant" required min="0" step="0.01">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="paiement" class="form-label">Statut du paiement</label>
+                        <select class="form-select" id="paiement" required>
+                            <option value="Non payé">Non payé</option>
+                            <option value="Payé">Payé</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">S'inscrire</button>
+                </form>
+            </div>
+
+            <div class="col-md-6">
+                <h2 class="section-title mb-4">Gestion des stages</h2>
+                <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="inscriptions-tab" data-bs-toggle="tab" href="#inscriptions" role="tab">Inscriptions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="finance-tab" data-bs-toggle="tab" href="#finance" role="tab">Résumé financier</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="presence-tab" data-bs-toggle="tab" href="#presence" role="tab">Résumé présences</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="animateurs-tab" data-bs-toggle="tab" href="#animateurs" role="tab">Animateurs</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="mainTabContent">
+                    <!-- Onglet Inscriptions -->
+                    <div class="tab-pane fade show active" id="inscriptions" role="tabpanel">
+                        <ul class="nav nav-pills mb-3" id="stageTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="tous-tab" data-bs-toggle="pill" href="#tous" role="tab">Tous</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="vtt-tab" data-bs-toggle="pill" href="#vtt" role="tab">VTT</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="danse-tab" data-bs-toggle="pill" href="#danse" role="tab">Danse</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="artistique-culinaire-tab" data-bs-toggle="pill" href="#artistique-culinaire" role="tab">Artistique/Culinaire</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="multisport-tab" data-bs-toggle="pill" href="#multisport" role="tab">Multisport</a>
+                            </li>
+                        </ul>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="inscriptionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nom/Prénom</th>
+                                        <th>Stage</th>
+                                        <th>Semaine</th>
+                                        <th>Montant</th>
+                                        <th>Paiement</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Résumé financier -->
+                    <div class="tab-pane fade" id="finance" role="tabpanel">
+                        <ul class="nav nav-pills mb-3" id="financeStagesTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="finance-tous-tab" data-bs-toggle="pill" href="#finance-tous" role="tab">Tous</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="finance-vtt-tab" data-bs-toggle="pill" href="#finance-vtt" role="tab">VTT</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="finance-danse-tab" data-bs-toggle="pill" href="#finance-danse" role="tab">Danse</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="finance-artistique-culinaire-tab" data-bs-toggle="pill" href="#finance-artistique-culinaire" role="tab">Artistique/Culinaire</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="finance-multisport-tab" data-bs-toggle="pill" href="#finance-multisport" role="tab">Multisport</a>
+                            </li>
+                        </ul>
+                        <div class="stage-summary">
+                            <h4 class="summary-title">
+                                Résumé financier
+                                <div class="float-end">
+                                    <button type="button" class="btn btn-success me-2" onclick="exporterResumesFinanciers()">
+                                        Télécharger le résumé financier
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="exporterResumeAnnuel()">
+                                        Télécharger le résumé financier annuel
+                                    </button>
+                                </div>
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div id="financialSummary"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="chartContainer"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Résumé présences -->
+                    <div class="tab-pane fade" id="presence" role="tabpanel">
+                        <ul class="nav nav-pills mb-3" id="presenceStagesTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="presence-tous-tab" data-bs-toggle="pill" href="#presence-tous" role="tab">Tous</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="presence-vtt-tab" data-bs-toggle="pill" href="#presence-vtt" role="tab">VTT</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="presence-danse-tab" data-bs-toggle="pill" href="#presence-danse" role="tab">Danse</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="presence-artistique-culinaire-tab" data-bs-toggle="pill" href="#presence-artistique-culinaire" role="tab">Artistique/Culinaire</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="presence-multisport-tab" data-bs-toggle="pill" href="#presence-multisport" role="tab">Multisport</a>
+                            </li>
+                        </ul>
+                        <div class="inscription-summary">
+                            <h4 class="summary-title">Résumé des présences</h4>
+                            <div id="inscriptionSummary"></div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Animateurs -->
+                    <div class="tab-pane fade" id="animateurs" role="tabpanel">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="summary-title">
+                                    Gestion des animateurs
+                                    <div class="float-end">
+                                        <button type="button" class="btn btn-success me-2" onclick="exporterListeAnimateurs()">
+                                            Liste des animateurs
+                                        </button>
+                                        <button type="button" class="btn btn-success" onclick="exporterCoutsSalariaux()">
+                                            Coûts salariaux
+                                        </button>
+                                    </div>
+                                </h4>
+                                <form id="animateurForm" class="needs-validation" novalidate>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="nomAnimateur" class="form-label">Nom/Prénom</label>
+                                            <input type="text" class="form-control" id="nomAnimateur" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="telephoneAnimateur" class="form-label">Numéro de téléphone</label>
+                                            <input type="tel" class="form-control" id="telephoneAnimateur" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="roleAnimateur" class="form-label">Rôle</label>
+                                            <select class="form-select" id="roleAnimateur" required>
+                                                <option value="Animateur">Animateur principal</option>
+                                                <option value="Aide">Aide animateur</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="stageAnimateur" class="form-label">Stage</label>
+                                            <select class="form-select" id="stageAnimateur" required>
+                                                <option value="">Choisir...</option>
+                                                <option value="VTT Débutant">VTT Débutant</option>
+                                                <option value="VTT Intermédiaire">VTT Intermédiaire</option>
+                                                <option value="VTT Confirmé">VTT Confirmé</option>
+                                                <option value="Danse">Danse</option>
+                                                <option value="Artistique/Culinaire">Artistique/Culinaire</option>
+                                                <option value="Multisport">Multisport</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="semaineAnimateur" class="form-label">Semaine</label>
+                                            <select class="form-select" id="semaineAnimateur" required>
+                                                <option value="">Choisir...</option>
+                                                <option value="Pâques 2025">Pâques semaine du 5 au 9 mai 2025</option>
+                                                <option value="Été S1 2025">Été semaine du 7 au 11 juillet 2025</option>
+                                                <option value="Été S2 2025">Été semaine du 14 au 18 juillet 2025</option>
+                                                <option value="Été S3 2025">Été semaine du 22 au 25 juillet 2025</option>
+                                                <option value="Été S4 2025">Été semaine du 18 au 22 août 2025</option>
+                                                <option value="Toussaint 2025">Toussaint semaine du 20 au 25 octobre 2025</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Ajouter l'animateur</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="animateursTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nom/Prénom</th>
+                                        <th>Téléphone</th>
+                                        <th>Rôle</th>
+                                        <th>Stage</th>
+                                        <th>Semaine</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
