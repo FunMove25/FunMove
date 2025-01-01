@@ -198,11 +198,17 @@ body {
 }
 
 #chartContainer > div {
-    background-color: white;
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-} 
+    box-shadow: none;
+    margin-bottom: 1rem;
+    background-color: transparent !important;
+}
+
+/* Ajouter cette règle pour cibler le canvas */
+#chartContainer canvas {
+    background-color: transparent !important;
+}
 
 .badge {
     font-size: 0.8em;
@@ -221,4 +227,37 @@ h1 {
     margin-bottom: 2rem;
     color: #87CEEB; /* Bleu ciel */
     -webkit-text-stroke: 1px #000080; /* Contour bleu marine plus fin */
+} 
+
+.chart-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px;
+}
+
+.stage-box {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.stage-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+.stage-details {
+    min-width: 250px;
+    padding-right: 20px;
+}
+
+.stage-chart {
+    width: 300px;
+    flex-grow: 0;
+    flex-shrink: 0;
 } 

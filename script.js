@@ -327,11 +327,10 @@ window.exporterListeAnimateurs = function() {
 
 window.exporterResumeAnnuel = function() {
     const inscriptions = JSON.parse(localStorage.getItem('inscriptions')) || [];
+    const animateurs = JSON.parse(localStorage.getItem('animateurs')) || [];
     const wb = XLSX.utils.book_new();
-    
-    // Créer un tableau pour toutes les données
-    const resumeData = [];
-    let totalAnnuel = 0;
+    const COUT_ANIMATEUR = 450;
+    const COUT_AIDE = 225;
     
     const semaines = [
         'Pâques 2025',
@@ -350,8 +349,9 @@ window.exporterResumeAnnuel = function() {
         'Artistique/Culinaire',
         'Multisport'
     ];
-
-    // Calculer les totaux pour chaque combinaison stage/semaine
+    
+    const resumeData = [];
+    
     stages.forEach(stage => {
         const stageData = {
             'Stage': stage,
@@ -359,49 +359,74 @@ window.exporterResumeAnnuel = function() {
         let totalStage = 0;
 
         semaines.forEach(semaine => {
+            // Calculer les revenus
             const inscrits = inscriptions.filter(i => 
                 i.stage === stage && i.semaine === semaine
             );
-            
-            const total = inscrits.reduce((sum, i) => sum + parseFloat(i.montant), 0);
-            stageData[semaine] = total.toFixed(2) + '€';
-            totalStage += total;
+            const revenus = inscrits.reduce((sum, i) => sum + parseFloat(i.montant), 0);
+            stageData[semaine + ' Revenus'] = revenus.toFixed(2) + '€';
+
+            // Calculer les coûts salariaux
+            const animateursStage = animateurs.filter(a => 
+                a.stage === stage && a.semaine === semaine
+            );
+            const coutsSalariaux = animateursStage.reduce((sum, a) => 
+                sum + (a.role === 'Animateur' ? COUT_ANIMATEUR : COUT_AIDE), 0
+            );
+            stageData[semaine + ' Coûts salariaux'] = '-' + coutsSalariaux.toFixed(2) + '€';
+
+            // Calculer le bénéfice net
+            const beneficeNet = revenus - coutsSalariaux;
+            stageData[semaine + ' Bénéfice net'] = beneficeNet.toFixed(2) + '€';
+            totalStage += beneficeNet;
         });
 
         stageData['Total stage'] = totalStage.toFixed(2) + '€';
-        totalAnnuel += totalStage;
         resumeData.push(stageData);
     });
 
-    // Ajouter une ligne pour les totaux par semaine
+    // Ajouter une ligne pour les totaux
     const totalsSemaine = {
-        'Stage': 'TOTAL PAR SEMAINE'
+        'Stage': 'TOTAL'
     };
     
+    let totalAnnuel = 0;
     semaines.forEach(semaine => {
-        const totalSemaine = inscriptions
+        const revenus = inscriptions
             .filter(i => i.semaine === semaine)
             .reduce((sum, i) => sum + parseFloat(i.montant), 0);
-        totalsSemaine[semaine] = totalSemaine.toFixed(2) + '€';
+        totalsSemaine[semaine + ' Revenus'] = revenus.toFixed(2) + '€';
+        
+        const coutsSalariaux = animateurs
+            .filter(a => a.semaine === semaine)
+            .reduce((sum, a) => sum + (a.role === 'Animateur' ? COUT_ANIMATEUR : COUT_AIDE), 0);
+        totalsSemaine[semaine + ' Coûts salariaux'] = '-' + coutsSalariaux.toFixed(2) + '€';
+        
+        const beneficeNet = revenus - coutsSalariaux;
+        totalsSemaine[semaine + ' Bénéfice net'] = beneficeNet.toFixed(2) + '€';
+        totalAnnuel += beneficeNet;
     });
     
     totalsSemaine['Total stage'] = totalAnnuel.toFixed(2) + '€';
     resumeData.push(totalsSemaine);
 
-    // Créer la feuille Excel
     const ws = XLSX.utils.json_to_sheet(resumeData);
 
-    // Ajuster la largeur des colonnes
-    const wscols = [
-        {wch: 20}, // Stage
-        {wch: 15}, // Pâques
-        {wch: 15}, // Été S1
-        {wch: 15}, // Été S2
-        {wch: 15}, // Été S3
-        {wch: 15}, // Été S4
-        {wch: 15}, // Toussaint
-        {wch: 15}  // Total stage
-    ];
+    // Ajuster la largeur des colonnes pour les nouvelles colonnes
+    const wscols = [];
+    Object.keys(resumeData[0]).forEach(key => {
+        if (key === 'Stage') {
+            wscols.push({wch: 20}); // Plus large pour le nom du stage
+        } else if (key.includes('Coûts salariaux')) {
+            wscols.push({wch: 20}); // Plus large pour "Coûts salariaux"
+        } else if (key.includes('Bénéfice net')) {
+            wscols.push({wch: 18}); // Plus large pour "Bénéfice net"
+        } else if (key.includes('Revenus')) {
+            wscols.push({wch: 18}); // Plus large pour "Revenus"
+        } else {
+            wscols.push({wch: 15}); // Largeur par défaut pour les autres colonnes
+        }
+    });
     ws['!cols'] = wscols;
 
     // Ajouter des styles
@@ -434,6 +459,193 @@ window.exporterResumeAnnuel = function() {
     XLSX.writeFile(wb, 'Resume_financier_annuel.xlsx');
 };
 
+window.exporterCoutsSalariaux = function() {
+    const animateurs = JSON.parse(localStorage.getItem('animateurs')) || [];
+    const wb = XLSX.utils.book_new();
+    const COUT_ANIMATEUR = 450;
+    const COUT_AIDE = 225;
+
+    const semaines = [
+        'Pâques 2025',
+        'Été S1 2025',
+        'Été S2 2025',
+        'Été S3 2025',
+        'Été S4 2025',
+        'Toussaint 2025'
+    ];
+
+    semaines.forEach(semaine => {
+        const stages = [
+            'VTT Débutant',
+            'VTT Intermédiaire',
+            'VTT Confirmé',
+            'Danse',
+            'Artistique/Culinaire',
+            'Multisport'
+        ];
+
+        const coutsSalariaux = stages.map(stage => {
+            const ligne = {
+                'Stage': stage,
+                'Animateur': '',
+                'Nom Animateur': '',
+                'Aide animateur': '',
+                'Nom Aide': '',
+                'Budget': '0€'
+            };
+
+            // Trouver les animateurs pour ce stage et cette semaine
+            const animateursStage = animateurs.filter(a => 
+                a.stage === stage && a.semaine === semaine
+            );
+
+            if (animateursStage.length > 0) {
+                let budget = 0;
+                animateursStage.forEach(a => {
+                    if (a.role === 'Animateur') {
+                        ligne['Animateur'] = 'X';
+                        ligne['Nom Animateur'] = a.nom;
+                        budget += COUT_ANIMATEUR;
+                    } else {
+                        ligne['Aide animateur'] = 'X';
+                        ligne['Nom Aide'] = a.nom;
+                        budget += COUT_AIDE;
+                    }
+                });
+                ligne['Budget'] = budget + '€';
+            }
+
+            return ligne;
+        });
+
+        // Calculer les totaux pour cette semaine
+        let totalAnimateurs = 0;
+        let totalAides = 0;
+        animateurs
+            .filter(a => a.semaine === semaine)
+            .forEach(a => {
+                if (a.role === 'Animateur') totalAnimateurs += COUT_ANIMATEUR;
+                else totalAides += COUT_AIDE;
+            });
+
+        // Ajouter la ligne des totaux
+        coutsSalariaux.push({
+            'Stage': 'TOTAL',
+            'Animateur': totalAnimateurs + '€',
+            'Nom Animateur': '',
+            'Aide animateur': totalAides + '€',
+            'Nom Aide': '',
+            'Budget': (totalAnimateurs + totalAides) + '€'
+        });
+
+        const ws = XLSX.utils.json_to_sheet(coutsSalariaux);
+
+        // Définir la largeur des colonnes
+        const wscols = [
+            {wch: 20}, // Stage
+            {wch: 12}, // Animateur
+            {wch: 25}, // Nom Animateur
+            {wch: 12}, // Aide animateur
+            {wch: 25}, // Nom Aide
+            {wch: 15}  // Budget
+        ];
+        ws['!cols'] = wscols;
+
+        // Ajouter des styles
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for(let R = range.s.r; R <= range.e.r; ++R) {
+            for(let C = range.s.c; C <= range.e.c; ++C) {
+                const cell_address = {c:C, r:R};
+                const cell_ref = XLSX.utils.encode_cell(cell_address);
+                if(!ws[cell_ref]) continue;
+
+                ws[cell_ref].s = {
+                    font: {
+                        bold: R === 0 || R === coutsSalariaux.length - 1
+                    },
+                    alignment: {
+                        horizontal: 'center',
+                        vertical: 'center'
+                    },
+                    border: {
+                        top: {style: 'thin'},
+                        bottom: {style: 'thin'},
+                        left: {style: 'thin'},
+                        right: {style: 'thin'}
+                    }
+                };
+            }
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, semaine);
+    });
+
+    // Après la boucle semaines.forEach, ajouter une feuille de total général
+    const totalGeneral = {
+        'Stage': 'TOTAL GÉNÉRAL',
+        'Animateur': 0,
+        'Nom Animateur': '',
+        'Aide animateur': 0,
+        'Nom Aide': '',
+        'Budget': 0
+    };
+
+    animateurs.forEach(a => {
+        if (a.role === 'Animateur') {
+            totalGeneral['Animateur'] += COUT_ANIMATEUR;
+        } else {
+            totalGeneral['Aide animateur'] += COUT_AIDE;
+        }
+        totalGeneral['Budget'] += (a.role === 'Animateur' ? COUT_ANIMATEUR : COUT_AIDE);
+    });
+
+    // Formater les montants
+    totalGeneral['Animateur'] = totalGeneral['Animateur'] + '€';
+    totalGeneral['Aide animateur'] = totalGeneral['Aide animateur'] + '€';
+    totalGeneral['Budget'] = totalGeneral['Budget'] + '€';
+
+    const wsTotal = XLSX.utils.json_to_sheet([totalGeneral]);
+
+    // Appliquer les styles au total général
+    const wscols = [
+        {wch: 20}, // Stage
+        {wch: 12}, // Animateur
+        {wch: 25}, // Nom Animateur
+        {wch: 12}, // Aide animateur
+        {wch: 25}, // Nom Aide
+        {wch: 15}  // Budget
+    ];
+    wsTotal['!cols'] = wscols;
+
+    // Ajouter des styles
+    const range = XLSX.utils.decode_range(wsTotal['!ref']);
+    for(let R = range.s.r; R <= range.e.r; ++R) {
+        for(let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_address = {c:C, r:R};
+            const cell_ref = XLSX.utils.encode_cell(cell_address);
+            if(!wsTotal[cell_ref]) continue;
+
+            wsTotal[cell_ref].s = {
+                font: { bold: true },
+                alignment: {
+                    horizontal: 'center',
+                    vertical: 'center'
+                },
+                border: {
+                    top: {style: 'medium'},
+                    bottom: {style: 'medium'},
+                    left: {style: 'medium'},
+                    right: {style: 'medium'}
+                }
+            };
+        }
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsTotal, "Total Général");
+
+    XLSX.writeFile(wb, 'Couts_salariaux_animateurs.xlsx');
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('inscriptionForm');
     const table = document.getElementById('inscriptionsTable').getElementsByTagName('tbody')[0];
@@ -442,14 +654,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function calculerTotalParStage() {
         const totaux = {};
+        const COUT_ANIMATEUR = 450;
+        const COUT_AIDE = 225;
+        const animateurs = JSON.parse(localStorage.getItem('animateurs')) || [];
+
         inscriptions.forEach(inscription => {
             const key = `${inscription.stage}-${inscription.semaine}`;
             if (!totaux[key]) {
                 totaux[key] = {
                     total: 0,
                     paye: 0,
-                    nonPaye: 0
+                    nonPaye: 0,
+                    coutsSalariaux: 0
                 };
+                
+                // Calculer les coûts salariaux pour ce stage/semaine
+                const animateursStage = animateurs.filter(a => 
+                    a.stage === inscription.stage && 
+                    a.semaine === inscription.semaine
+                );
+                totaux[key].coutsSalariaux = animateursStage.reduce((sum, a) => 
+                    sum + (a.role === 'Animateur' ? COUT_ANIMATEUR : COUT_AIDE), 0
+                );
             }
             const montant = parseFloat(inscription.montant);
             totaux[key].total += montant;
@@ -480,12 +706,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 else if (stageFiltre !== 'vtt' && !stage.toLowerCase().startsWith(stageFiltre.toLowerCase())) continue;
             }
 
+            const beneficeNet = value.total - value.coutsSalariaux;
             html += `
                 <div class="mb-2">
                     <strong>${stage} - ${semaine}</strong><br>
-                    Total: ${value.total.toFixed(2)}€<br>
+                    Total revenus: ${value.total.toFixed(2)}€<br>
                     Payé: ${value.paye.toFixed(2)}€<br>
-                    Non payé: ${value.nonPaye.toFixed(2)}€
+                    Non payé: ${value.nonPaye.toFixed(2)}€<br>
+                    Coûts salariaux: -${value.coutsSalariaux.toFixed(2)}€<br>
+                    <strong>Bénéfice net: ${beneficeNet.toFixed(2)}€</strong>
                 </div>
             `;
         }
@@ -495,7 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         summaryDiv.innerHTML = html;
-        
         creerGraphiques(totaux, stageFiltre);
     }
 
@@ -537,58 +765,51 @@ document.addEventListener('DOMContentLoaded', function() {
         let html = '';
         const CAPACITE_MAX = 20;
 
-        for (const [stage, semaineDonnees] of Object.entries(resume)) {
-            // Corriger la logique du filtre
-            if (stageFiltre) {
-                if (stageFiltre === 'vtt' && !stage.toLowerCase().includes('vtt')) continue;
-                if (stageFiltre === 'artistique-culinaire' && stage !== 'Artistique/Culinaire') continue;
-                if (stageFiltre === 'danse' && stage !== 'Danse') continue;
-                if (stageFiltre === 'multisport' && stage !== 'Multisport') continue;
-            }
+        if (stageFiltre === 'tous') {
+            // Calculer les totaux par semaine
+            const totauxParSemaine = {};
+            Object.keys(semaines).forEach(semaine => {
+                totauxParSemaine[semaine] = {
+                    count: 0,
+                    participants: [],
+                    capaciteMax: CAPACITE_MAX * 6 // 6 stages différents
+                };
+            });
 
-            // Calculer le nombre total d'inscrits pour ce stage
-            const totalInscrits = Object.values(semaineDonnees).reduce((total, donnees) => total + donnees.count, 0);
-            const totalPlaces = CAPACITE_MAX * Object.keys(semaineDonnees).length;
-            const placesRestantes = totalPlaces - totalInscrits;
-            
-            // Déterminer la couleur de l'indicateur
-            let indicatorColor;
-            if (totalInscrits >= totalPlaces) {
-                indicatorColor = 'danger';
-            } else if (totalInscrits >= totalPlaces * 0.8) {
-                indicatorColor = 'warning';
-            } else {
-                indicatorColor = 'success';
-            }
+            // Remplir les totaux
+            Object.values(resume).forEach(stageDonnees => {
+                Object.entries(stageDonnees).forEach(([semaine, donnees]) => {
+                    totauxParSemaine[semaine].count += donnees.count;
+                    totauxParSemaine[semaine].participants.push(...donnees.participants);
+                });
+            });
 
-            html += `<div class="summary-section">
-                <h5>
-                    ${stage}
-                    <span class="badge bg-${indicatorColor} ms-2">
-                        ${totalInscrits}/${totalPlaces}
-                    </span>
-                </h5>`;
-            
-            for (const [semaine, donnees] of Object.entries(semaineDonnees)) {
+            // Générer le HTML pour chaque semaine
+            html += '<div class="summary-section">';
+            Object.entries(totauxParSemaine).forEach(([semaine, donnees]) => {
                 const semaineDetails = semaines[semaine];
-                const placesRestantes = CAPACITE_MAX - donnees.count;
-                const progressPercentage = (donnees.count / CAPACITE_MAX) * 100;
-                
-                // Déterminer la couleur de la barre de progression
+                const placesRestantes = donnees.capaciteMax - donnees.count;
+                const progressPercentage = (donnees.count / donnees.capaciteMax) * 100;
+
                 let progressColor;
-                if (donnees.count >= CAPACITE_MAX) {
-                    progressColor = 'bg-danger';  // Rouge si complet
-                } else if (donnees.count >= CAPACITE_MAX * 0.8) {
-                    progressColor = 'bg-warning';  // Orange si presque complet
+                if (donnees.count >= donnees.capaciteMax) {
+                    progressColor = 'bg-danger';
+                } else if (donnees.count >= donnees.capaciteMax * 0.8) {
+                    progressColor = 'bg-warning';
                 } else {
-                    progressColor = 'bg-success';  // Vert si places disponibles
+                    progressColor = 'bg-success';
                 }
 
                 html += `
-                    <div class="mb-3">
-                        <strong>${semaine} (${semaineDetails})</strong><br>
+                    <div class="mb-4">
+                        <h5>
+                            ${semaine} (${semaineDetails})
+                            <span class="badge bg-${progressColor} ms-2">
+                                ${donnees.count}/${donnees.capaciteMax}
+                            </span>
+                        </h5>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span>Inscrits: ${donnees.count}/${CAPACITE_MAX}</span>
+                            <span>Inscrits: ${donnees.count}/${donnees.capaciteMax}</span>
                             <span>${placesRestantes > 0 ? `Places restantes: ${placesRestantes}` : 'COMPLET'}</span>
                         </div>
                         <div class="progress" style="height: 20px; margin: 10px 0;">
@@ -597,25 +818,79 @@ document.addEventListener('DOMContentLoaded', function() {
                                  style="width: ${progressPercentage}%" 
                                  aria-valuenow="${donnees.count}" 
                                  aria-valuemin="0" 
-                                 aria-valuemax="${CAPACITE_MAX}">
-                                ${donnees.count}/${CAPACITE_MAX}
+                                 aria-valuemax="${donnees.capaciteMax}">
+                                ${donnees.count}/${donnees.capaciteMax}
                             </div>
                         </div>
                         ${donnees.count > 0 ? `
                             <div class="mt-2">
                                 <strong>Participants:</strong><br>
-                                ${donnees.participants.join(', ')}<br>
-                                <button class="btn btn-sm btn-success mt-2" onclick="exporterListePresence('${stage}', '${semaine}')">
-                                    Télécharger la liste des présences
-                                </button>
+                                ${donnees.participants.join(', ')}
                             </div>
                         ` : 'Aucun inscrit'}
                     </div>`;
+            });
+            html += '</div>';
+        } else {
+            // Affichage par type de stage
+            html += '<div class="summary-section">';
+            for (const [stage, semaineDonnees] of Object.entries(resume)) {
+                if (stageFiltre === 'vtt' && !stage.toLowerCase().includes('vtt')) continue;
+                if (stageFiltre === 'artistique-culinaire' && stage !== 'Artistique/Culinaire') continue;
+                if (stageFiltre === 'danse' && stage !== 'Danse') continue;
+                if (stageFiltre === 'multisport' && stage !== 'Multisport') continue;
+
+                html += `<h4>${stage}</h4>`;
+                
+                for (const [semaine, donnees] of Object.entries(semaineDonnees)) {
+                    const semaineDetails = semaines[semaine];
+                    const placesRestantes = CAPACITE_MAX - donnees.count;
+                    const progressPercentage = (donnees.count / CAPACITE_MAX) * 100;
+
+                    let progressColor;
+                    if (donnees.count >= CAPACITE_MAX) {
+                        progressColor = 'bg-danger';
+                    } else if (donnees.count >= CAPACITE_MAX * 0.8) {
+                        progressColor = 'bg-warning';
+                    } else {
+                        progressColor = 'bg-success';
+                    }
+
+                    html += `
+                        <div class="mb-4">
+                            <h5>
+                                ${semaine} (${semaineDetails})
+                                <span class="badge bg-${progressColor} ms-2">
+                                    ${donnees.count}/${CAPACITE_MAX}
+                                </span>
+                            </h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Inscrits: ${donnees.count}/${CAPACITE_MAX}</span>
+                                <span>${placesRestantes > 0 ? `Places restantes: ${placesRestantes}` : 'COMPLET'}</span>
+                            </div>
+                            <div class="progress" style="height: 20px; margin: 10px 0;">
+                                <div class="progress-bar ${progressColor}" 
+                                     role="progressbar" 
+                                     style="width: ${progressPercentage}%" 
+                                     aria-valuenow="${donnees.count}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="${CAPACITE_MAX}">
+                                    ${donnees.count}/${CAPACITE_MAX}
+                                </div>
+                            </div>
+                            ${donnees.count > 0 ? `
+                                <div class="mt-2">
+                                    <strong>Participants:</strong><br>
+                                    ${donnees.participants.join(', ')}
+                                </div>
+                            ` : 'Aucun inscrit'}
+                        </div>`;
+                }
             }
             html += '</div>';
         }
 
-        summaryDiv.innerHTML = html || '<p>Aucune donnée disponible pour ce type de stage.</p>';
+        summaryDiv.innerHTML = html || '<p>Aucune donnée disponible.</p>';
     }
 
     function afficherInscriptions(stageFiltre = null) {
@@ -639,7 +914,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${inscription.stage}</td>
                 <td>${inscription.semaine}</td>
                 <td>${inscription.montant}€</td>
-                <td>${inscription.paiement}</td>
+                <td>
+                    <button class="btn btn-sm ${inscription.paiement === 'Payé' ? 'btn-success' : 'btn-warning'}" 
+                            onclick="changerStatutPaiement(${index})">
+                        ${inscription.paiement}
+                    </button>
+                </td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="supprimerInscription(${index})">
                         Supprimer
@@ -793,51 +1073,55 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const chartDiv = document.createElement('div');
-            chartDiv.className = 'mb-4';
-            chartDiv.style.maxWidth = '300px';
-            
+            chartDiv.style.marginBottom = '20px';
             const canvas = document.createElement('canvas');
             chartDiv.appendChild(canvas);
             chartContainer.appendChild(chartDiv);
 
-            const total = value.paye + value.nonPaye;
-
             new Chart(canvas, {
                 type: 'pie',
                 data: {
-                    labels: ['Payé', 'Non payé'],
+                    labels: ['Payé', 'Non payé', 'Coûts salariaux'],
                     datasets: [{
                         data: [
                             value.paye,
-                            value.nonPaye
+                            value.nonPaye,
+                            value.coutsSalariaux
                         ],
                         backgroundColor: [
                             '#00B050', // Vert pour payé
-                            '#FF6B00'  // Orange pour non payé
+                            '#FF6B00', // Orange pour non payé
+                            '#FF0000'  // Rouge pour coûts salariaux
                         ]
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    backgroundColor: 'transparent',
+                    elements: {
+                        arc: {
+                            borderWidth: 0
+                        }
+                    },
+                    layout: {
+                        padding: 20
+                    },
                     plugins: {
                         title: {
                             display: true,
                             text: `${stage} - ${semaine}`,
                             font: {
                                 size: 14
-                            }
+                            },
+                            color: '#333333'
                         },
                         legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                    return `${context.label}: ${value.toFixed(2)}€ (${percentage}%)`;
-                                }
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 20,
+                                padding: 20,
+                                color: '#333333'
                             }
                         }
                     }
@@ -853,4 +1137,11 @@ document.addEventListener('DOMContentLoaded', function() {
             afficherResumeInscriptions(stageFiltre === 'tous' ? null : stageFiltre);
         });
     });
+
+    // Ajouter la fonction pour changer le statut de paiement
+    window.changerStatutPaiement = function(index) {
+        inscriptions[index].paiement = inscriptions[index].paiement === 'Payé' ? 'Non payé' : 'Payé';
+        localStorage.setItem('inscriptions', JSON.stringify(inscriptions));
+        afficherInscriptions();
+    };
 }); 
